@@ -53,10 +53,10 @@ paths:
             type: array
             items:
               $ref: '#/definitions/Programmer'
+        400:
+          $ref: '#/responses/BadRequest'
         default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
     post:
       summary: creates a Programmer
       description: This endpoint allows the creation of a programmer defined as a json in the body of this request
@@ -65,7 +65,7 @@ paths:
           in: body
           required: true
           schema:
-            $ref: "#/definitions/Programmer"
+            $ref: "#/definitions/CreateProgrammer"
       tags:
         - Create
         - Programmers
@@ -74,10 +74,10 @@ paths:
           description: A newly created programmer
           schema:
             $ref: '#/definitions/Programmer'
+        400:
+          $ref: '#/responses/BadRequest'
         default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
   /programmers/{pid}:
     get:
       summary: Reads a programmer
@@ -93,10 +93,12 @@ paths:
           description: A programmer specified by id
           schema:
             $ref: '#/definitions/Programmer'
+        400:
+          $ref: '#/responses/BadRequest'
+        404:
+          $ref: '#/responses/NotFound'
         default:
-          description: Unexpected error
-          schema:
-            $ref: '#/definitions/Error'
+          $ref: '#/responses/InternalServerError'
 
 # An object to hold parameters that can be used across operations.
 # This property does not define global parameters for all operations.
@@ -133,8 +135,8 @@ responses:
     description: Invalid input
     schema:
       $ref: '#/definitions/Error'
-  Unauthorized:
-    description: You are not authenticated into the system
+  NotFound:
+    description: The requested programmer is not found
     schema:
       $ref: '#/definitions/Error'
   InternalServerError:
@@ -150,6 +152,19 @@ definitions:
       id:
         type: string
         description: Unique identifier representing a specific Lunatech programmer. For example, Erik will have a different id than Inaki.
+      name:
+        type: string
+        description: Name of the programmer.
+      lastName:
+        type: string
+        description: Last name of the programmer.
+      email:
+        type: string
+        format: email
+        description: Programmer's email
+  CreateProgrammer:
+    type: object
+    properties:
       name:
         type: string
         description: Name of the programmer.
