@@ -1,0 +1,175 @@
+# Required. All specifications are described in detail on http://swagger.io/specification/
+swagger: '2.0'
+
+# Required. Provides metadata about the API. The metadata can be used by the clients if needed.
+info:
+  description: This is the API to give you a list of Programmers
+  version: '1.0'
+  title: Programmers API
+  contact:
+    email: you@domain.com
+  license:
+    name: 'Apache 2.0'
+    url: 'http://www.apache.org/lincenses/LICENSE-2.0.html'
+
+# The host (name or ip) serving the API
+host: localhost:8081
+
+# The base path on which the API is served, which is relative to the host
+# All other paths will be relative to the basePath specified
+# The value MUST start with a leading slash (/)
+basePath: /
+
+# The transfer protocol of the API. Values MUST be from the list: "http", "https", "ws", "wss".
+schemes:
+  - http
+
+# A list of MIME types the APIs can consume.
+consumes:
+  - application/json
+
+# A list of MIME types the APIs can produce
+produces:
+  - application/json
+
+
+# Required. The available paths and operations for the API.
+paths:
+  /programmers:
+    get:
+      summary: Lists programmers
+      description: |
+        The programmers endpoint returns a list of programmers available.
+      parameters:
+        - $ref: '#/parameters/skip'
+        - $ref: '#/parameters/limit'
+      tags:
+        - List
+        - Programmers
+      responses:
+        200:
+          description: An array of programmers
+          schema:
+            type: array
+            items:
+              $ref: '#/definitions/Programmer'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+    post:
+      summary: creates a Programmer
+      description: This endpoint allows the creation of a programmer defined as a json in the body of this request
+      parameters:
+        - name: programmer
+          in: body
+          required: true
+          schema:
+            $ref: "#/definitions/Programmer"
+      tags:
+        - Create
+        - Programmers
+      responses:
+        201:
+          description: A newly created programmer
+          schema:
+            $ref: '#/definitions/Programmer'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+  /programmers/{pid}:
+    get:
+      summary: Reads a programmer
+      description: |
+        The programmer endpoint returns a programmer specified by the id parameter.
+      tags:
+        - Read
+        - Programmers
+      parameters:
+        - $ref: '#/parameters/pid'
+      responses:
+        200:
+          description: A programmer specified by id
+          schema:
+            $ref: '#/definitions/Programmer'
+        default:
+          description: Unexpected error
+          schema:
+            $ref: '#/definitions/Error'
+
+# An object to hold parameters that can be used across operations.
+# This property does not define global parameters for all operations.
+parameters:
+  pid:
+    name: pid
+    in: path
+    description: Id of the programmer being requested.
+    required: true
+    type: string
+    format: uuid
+  skip:
+    in: query
+    name: skip
+    description: start of pagination
+    type: integer
+    format: int32
+    minimum: 0
+    maximum: 50
+    default: 0
+  limit:
+    in: query
+    name: limit
+    description: Maximum number of records to return from skip
+    type: integer
+    format: int32
+    minimum: 1
+    maximum: 50
+
+# An object to hold responses that can be used across operations.
+# This property does not define global responses for all operations.
+responses:
+  BadRequest:
+    description: Invalid input
+    schema:
+      $ref: '#/definitions/Error'
+  Unauthorized:
+    description: You are not authenticated into the system
+    schema:
+      $ref: '#/definitions/Error'
+  InternalServerError:
+    description: An unexpected error occured
+    schema:
+      $ref: '#/definitions/Error'
+
+# An object to hold data types produced and consumed by operations.
+definitions:
+  Programmer:
+    type: object
+    properties:
+      id:
+        type: string
+        description: Unique identifier representing a specific Lunatech programmer. For example, Erik will have a different id than Inaki.
+      name:
+        type: string
+        description: Name of the programmer.
+      lastName:
+        type: string
+        description: Last name of the programmer.
+      email:
+        type: string
+        format: email
+        description: Programmer's email
+  Error:
+    type: object
+    properties:
+      type:
+        type: string
+      message:
+        type: string
+      internalCode:
+        type: integer
+        format: int32
+      timestamp:
+        type: integer
+        format: int64
