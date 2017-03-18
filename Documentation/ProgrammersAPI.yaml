@@ -32,7 +32,6 @@ consumes:
 produces:
   - application/json
 
-
 # Required. The available paths and operations for the API.
 paths:
   /programmers:
