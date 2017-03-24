@@ -16,6 +16,7 @@ lazy val finchVersion         = "0.13.1"
 
 val rootDependencies = Seq(
   "com.twitter"        %% "finagle-http"   % finagleVersion,
+  "com.twitter"        %% "finagle-stats"  % finagleVersion,
   "io.circe"           %% "circe-core"     % circeVersion,
   "io.circe"           %% "circe-generic"  % circeVersion,
   "io.circe"           %% "circe-parser"   % circeVersion,
@@ -27,6 +28,9 @@ val rootDependencies = Seq(
   "com.h2database"     % "h2"              % "1.3.175",
   "org.scalacheck"     %% "scalacheck"     % "1.12.5",
   "joda-time"          % "joda-time"       % "2.3",
+  "ch.qos.logback"     % "logback-core"    % "1.1.7",
+  "ch.qos.logback"     % "logback-classic" % "1.1.7",
+  "org.slf4j"          % "slf4j-api"       % "1.7.21",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 

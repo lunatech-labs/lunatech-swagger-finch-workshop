@@ -7,7 +7,7 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.syntax._
 import slick.driver.H2Driver.api._
 
-case class Programmer(id: UUID, name: String, lastName: String, email: String)
+case class Programmer(id: UUID, name: String, lastName: String, email: String) //add email
 
 object Programmer extends ((UUID, String, String, String) => Programmer) {
 
