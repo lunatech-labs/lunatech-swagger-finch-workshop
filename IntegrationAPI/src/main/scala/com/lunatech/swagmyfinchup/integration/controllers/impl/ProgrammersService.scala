@@ -26,6 +26,125 @@ class ProgrammersService(override val client: Service[Request, Response],
                          override val apiName: String)(implicit val ec: ExecutionContext)
     extends APIService[Programmer] {
 
+  override def create(registry: Programmer): Future[Either[SMFUEerror, Programmer]] = {
+    val request: Request = Request(Method.Post, "/programmers")
+    request.content = ChannelBufferBuf.newOwned(copiedBuffer(registry.asJson.toString(), UTF_8))
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processProgrammer(json)
+                             }
+                           }
+                         })
+  }
+
+  override def read(id: UUID): Future[Either[SMFUEerror, Programmer]] = {
+    val request: Request = Request(Method.Get, s"/programmers/$id")
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processProgrammer(json)
+                             }
+                           }
+                         })
+  }
+
+  override def update(
+      id: UUID,
+      registryF: Programmer => Programmer): Future[Either[SMFUEerror, Programmer]] = {
+    val patchedProgrammer: Programmer = registryF(Programmer(id, "dummy", "dummy", "dummy"))
+    val request: Request =
+      Request(Method.Patch, s"/programmers/$id")
+    request.content =
+      ChannelBufferBuf.newOwned(copiedBuffer(patchedProgrammer.asJson.toString(), UTF_8))
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processProgrammer(json)
+                             }
+                           }
+                         })
+  }
+
+  override def delete(id: UUID): Future[Either[SMFUEerror, Int]] = {
+    val request: Request = Request(Method.Delete, s"/programmers/$id")
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processInt(json)
+                             }
+                           }
+                         })
+  }
+
+  override def list(skip: Int, limit: Int): Future[Either[SMFUEerror, Seq[Programmer]]] = {
+    val request: Request = Request(Method.Get, "/programmers")
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processProgrammers(json)
+                             }
+                           }
+                         })
+  }
+
+  override def docs(): Future[Either[SMFUEerror, Json]] = {
+    val request: Request = Request(Method.Get, "/programmers/docs")
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => Right(json)
+                             }
+                           }
+                         })
+  }
+
+  override def readSlow(): Future[Either[SMFUEerror, Programmer]] = {
+    val request: Request = Request(Method.Get, "/programmers/slow")
+    client(request) map (resp => {
+                           if (resp.getStatusCode() >= 400)
+                             Left(CreationException(
+                               "Programmer",
+                               s"$apiName error: ${resp.getStatusCode} - ${resp.getContentString}"))
+                           else {
+                             parse(resp.contentString) match {
+                               case Left(e)     => Left(CreationException("Programmer", e.getMessage))
+                               case Right(json) => processProgrammer(json)
+                             }
+                           }
+                         })
+  }
+
   private def processProgrammer(json: Json): Either[SMFUEerror, Programmer] =
     json.as[Programmer] match {
       case Left(e)       => Left(ParseException("programmer", e.getMessage))
@@ -44,34 +163,21 @@ class ProgrammersService(override val client: Service[Request, Response],
       case Right(result) => Right(result)
     }
 
-  override def create(registry: Programmer): Future[Either[SMFUEerror, Programmer]] =
-    Future.value(Right(Programmer(UUID.randomUUID(), "", "", "")))
-
-  override def read(id: UUID): Future[Either[SMFUEerror, Programmer]] =
-    Future.value(Right(Programmer(UUID.randomUUID(), "", "", "")))
-
-  override def update(
-      id: UUID,
-      registryF: (Programmer) => Programmer): Future[Either[SMFUEerror, Programmer]] =
-    Future.value(Right(Programmer(UUID.randomUUID(), "", "", "")))
-
-  override def delete(id: UUID): Future[Either[SMFUEerror, Int]] = Future.value(Right(1))
-
-  override def list(skip: Int, limit: Int): Future[Either[SMFUEerror, Seq[Programmer]]] =
-    Future.value(Right(Seq.empty[Programmer]))
-
-  override def docs(): Future[Either[SMFUEerror, Json]] =
-    Future.value(Right(Json.fromString("{}")))
-
-  override def readSlow(): Future[Either[SMFUEerror, Programmer]] =
-    Future.value(Right(Programmer(UUID.randomUUID(), "", "", "")))
 }
 
 object ProgrammersService {
 
   def apply(instances: Name)(implicit ec: ExecutionContext): ProgrammersService = {
-    val service: Service[Request, Response] = Http.client.newService(instances, "programmers-api")
-    new ProgrammersService(service, "programmers-api")
+
+    val shouldRetry: PartialFunction[(Request, Try[Response]), Boolean] = {
+      case (_, Return(rep)) => rep.status != 200
+    }
+
+    implicit val t = HighResTimer.Default
+    val retry      = RetryFilter(Backoff.const(1.second).take(3))(shouldRetry)
+    val service: Service[Request, Response] =
+      Http.client.withTlsWithoutValidation.newService(instances, "programmers-api")
+    new ProgrammersService(retry.andThen(service), "programmers-api")
   }
 
 }
