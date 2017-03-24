@@ -9,7 +9,7 @@ host: swag-my-finch-up.lunatech.com
 schemes:
   - https
 # will be prefixed to all paths
-basePath: /
+basePath: /v1
 produces:
   - application/json
 paths:

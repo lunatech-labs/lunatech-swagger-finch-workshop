@@ -1,0 +1,15 @@
+#Invalid yaml file. what are we missing?!?!?!?!
+swagger: '2.0'
+info:
+  title: Integration API
+  description: A tool to get integrated info of Programmers and skills
+  version: "1.0.0"
+# the domain of the service
+host: swag-my-finch-up.lunatech.com
+# array of all schemes that your API supports
+schemes:
+  - https
+# will be prefixed to all paths
+basePath: /v1
+produces:
+  - application/json

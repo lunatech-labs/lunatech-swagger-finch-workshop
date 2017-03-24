@@ -11,12 +11,28 @@ import com.twitter.util.Await
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import com.twitter.finagle.http.filter.Cors
+import com.twitter.finagle.http.filter.Cors.HttpFilter
+import com.ccadllc.cedi.config.ConfigParser
+import com.lunatech.swagmyfinchup.programmers.utils.Helpers._
+import com.lunatech.swagmyfinchup.programmers.filters._
+import com.typesafe.config.ConfigFactory
 
-object Main extends TwitterServer with ProgrammersAPI {
+object Main extends TwitterServer with ProgrammersAPI with CORSFilter {
+
+  val conf = ConfigFactory.load()
 
   val port: Flag[Int] = flag("port", 8081, "TCP port for HTTP server")
 
   val programmersCounter: Counter = statsReceiver.counter("programmers")
+
+  //<Delete>
+  override def defaultHttpPort: Int = 9081
+  //</Delete>
+
+  val derivedParser: ConfigParser[CorsConfig] = ConfigParser.derived[CorsConfig]
+  val corsconfig: CorsConfig                  = validateConfig(derivedParser.under("server.cors").parse(conf))
+  val corsFilter: HttpFilter                  = new Cors.HttpFilter(corspolicy(corsconfig))
 
   val api: Service[Request, Response] = programmersApi
     .handle({
@@ -24,11 +40,17 @@ object Main extends TwitterServer with ProgrammersAPI {
     })
     .toServiceAs[Application.Json]
 
+  val corsFiltered: Service[Request, Response] = corsFilter andThen api
+
   def main(): Unit = {
-    log.info(s"Serving the ProgrammersAPI on port :${port()}")
+    log.info("Serving the ProgrammersAPI")
+
     SqlController.createDatabase
 
-    val server = Http.server.withStatsReceiver(statsReceiver).serve(s":${port()}", api)
+    val server = Http.server
+      .withLabel("ProgrammersAPI")
+      .withStatsReceiver(statsReceiver)
+      .serve(s":${port()}", corsFiltered)
 
     onExit { server.close() }
 
