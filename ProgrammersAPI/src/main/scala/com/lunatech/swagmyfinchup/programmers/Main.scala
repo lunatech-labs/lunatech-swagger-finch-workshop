@@ -12,7 +12,12 @@ import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
 
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory._
+
 object Main extends TwitterServer with ProgrammersAPI {
+
+  val logger: Logger = getLogger(getClass)
 
   val port: Flag[Int] = flag("port", 8081, "TCP port for HTTP server")
 

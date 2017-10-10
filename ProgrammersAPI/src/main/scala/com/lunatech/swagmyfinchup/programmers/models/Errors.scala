@@ -1,6 +1,5 @@
 package com.lunatech.swagmyfinchup.programmers.models
 
-import io.circe.{Encoder, Json}
 
 sealed trait SMFUEerror extends Exception {
   override def getLocalizedMessage: String = internalCode.toString

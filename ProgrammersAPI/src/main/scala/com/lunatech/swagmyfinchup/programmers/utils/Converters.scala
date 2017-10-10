@@ -1,10 +1,9 @@
 package com.lunatech.swagmyfinchup.programmers.utils
 
 import com.twitter.util.{Future => TwitterFuture, Promise => TwitterPromise, Return, Throw}
-import com.twitter.{util => twitter}
 
 import scala.concurrent.{ExecutionContext, Future => ScalaFuture, Promise => ScalaPromise}
-import scala.util.{Failure, Success, Try}
+import scala.util.{Failure, Success}
 
 object Converters {
 

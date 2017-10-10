@@ -1,18 +1,19 @@
-import sbt._
-import Keys._
 
 name := "ProgrammersAPI"
 
-version := "1.0.0"
+version := "1.0.1"
 
-scalaVersion := "2.11.8"
+scalaVersion := "2.12.3"
 
-scalafmtConfig in ThisBuild := Some(file(".scalafmt.conf"))
+//scalafmtConfig in ThisBuild := Some(file(".scalafmt.conf"))
 
-lazy val finagleVersion       = "6.42.0"
-lazy val twitterServerVersion = "1.27.0"
-lazy val circeVersion         = "0.7.0"
-lazy val finchVersion         = "0.13.1"
+lazy val finagleVersion       = "6.45.0"
+lazy val twitterServerVersion = "1.30.0"
+
+lazy val catsVersion = "0.9.0"
+lazy val circeVersion = "0.8.0"
+lazy val finchVersion = "0.15.1"
+lazy val logbackVersion = "1.2.3"
 
 val rootDependencies = Seq(
   "com.twitter"        %% "finagle-http"   % finagleVersion,
@@ -23,16 +24,15 @@ val rootDependencies = Seq(
   "com.github.finagle" %% "finch-circe"    % finchVersion,
   "com.twitter"        %% "twitter-server" % twitterServerVersion,
   "com.typesafe"       % "config"          % "1.3.1",
-  "com.typesafe.slick" %% "slick"          % "3.0.0",
+  "com.typesafe.slick" %% "slick"          % "3.2.0",
   "com.h2database"     % "h2"              % "1.3.175",
-  "org.scalacheck"     %% "scalacheck"     % "1.12.5",
   "joda-time"          % "joda-time"       % "2.3",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 
 val testDependencies = Seq(
-  "org.scalacheck" %% "scalacheck" % "1.12.5",
-  "org.scalatest"  %% "scalatest"  % "2.2.6"
+  "org.scalacheck" %% "scalacheck" % "1.13.5",
+  "org.scalatest"  %% "scalatest"  % "3.0.3"
 )
 
 resolvers ++= Seq(
@@ -43,6 +43,7 @@ lazy val root =
   project
     .in(file("."))
     .settings(
+      scalacOptions += "-Ywarn-unused-import" ,
       libraryDependencies ++= Seq(
         "org.scala-lang" % "scala-reflect" % scalaVersion.value
         //for tomcat webapp
@@ -66,4 +67,4 @@ lazy val root =
 
 fork in run := true
 
-reformatOnCompileSettings
+//reformatOnCompileSettings
