@@ -1,30 +1,30 @@
-package com.lunatech.swagmyfinchup.programmers
+package com.lunatech.swagmyfinchup.skills
 
 import java.io.InputStream
 import java.security.KeyStore
 import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
 
-import com.lunatech.swagmyfinchup.programmers.controllers.SqlController
-import com.lunatech.swagmyfinchup.programmers.utils.ServerFactory
-import com.lunatech.swagmyfinchup.programmers.views.ProgrammersAPI
+import com.lunatech.swagmyfinchup.skills.controllers.SqlController
+import com.lunatech.swagmyfinchup.skills.utils.ServerFactory
+import com.lunatech.swagmyfinchup.skills.views.SkillsAPI
 import com.twitter.app.Flag
+import com.twitter.finagle.Service
 import com.twitter.finagle.http.{Request, Response}
 import com.twitter.finagle.stats.Counter
-import com.twitter.finagle.{ListeningServer, Service}
 import com.twitter.server.TwitterServer
 import com.twitter.util.Await
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
 
-object Main extends TwitterServer with ProgrammersAPI {
+object Main extends TwitterServer with SkillsAPI {
 
-  val port: Flag[Int]    = flag("port", 8081, "TCP port for HTTP server")
-  val tlsPort: Flag[Int] = flag("port", 38080, "TCP port for HTTP server")
+  val port: Flag[Int]    = flag("port", 8085, "TCP port for HTTP server")
+  val tlsPort: Flag[Int] = flag("port", 38081, "TCP port for HTTP server")
 
-  val programmersCounter: Counter = statsReceiver.counter("programmers")
+  val skillsCounter: Counter = statsReceiver.counter("skills")
 
-  override def defaultHttpPort: Int = 9081
+  override def defaultHttpPort: Int = 9995
 
   val sSLContext: SSLContext = {
     val keystore = getClass.getClassLoader.getResourceAsStream("keystore.jks")
@@ -63,19 +63,21 @@ object Main extends TwitterServer with ProgrammersAPI {
     sslContext
   }
 
-  val api: Service[Request, Response] = programmersApi
+  val api: Service[Request, Response] = skillsApi
     .handle({
-      case e: Exception => NotFound(e)
+      case e: Exception => {
+        e.printStackTrace()
+        NotFound(e)
+      }
     })
     .toServiceAs[Application.Json]
 
   def main(): Unit = {
-    log.info("Serving the ProgrammersAPI")
+    log.info("Serving the SkillsAPI")
     SqlController.createDatabase
 
-    val server: ListeningServer = ServerFactory("ProgrammersAPI", statsReceiver, port, api, None)
-    val tlsServer: ListeningServer =
-      ServerFactory("TLSServer", statsReceiver, tlsPort, api, Some(sSLContext))
+    val server    = ServerFactory("SkillsAPI", statsReceiver, port, api, None)
+    val tlsServer = ServerFactory("TLSServer", statsReceiver, tlsPort, api, Some(sSLContext))
 
     onExit { server.close(); tlsServer.close() }
 
