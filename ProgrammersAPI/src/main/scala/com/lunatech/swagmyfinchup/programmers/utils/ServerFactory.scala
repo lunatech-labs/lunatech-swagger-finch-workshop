@@ -25,9 +25,11 @@ object ServerFactory {
   implicit class ServerOps(server: Http.Server) {
 
     def withTls(sslContextOpt: Option[SSLContext]) =
-      sslContextOpt.map { sslContex =>
-        server.withTransport.tls(sslContex)
-      }.getOrElse(server)
+      sslContextOpt
+        .map { sslContex =>
+          server.withTransport.tls(sslContex)
+        }
+        .getOrElse(server)
 
   }
 

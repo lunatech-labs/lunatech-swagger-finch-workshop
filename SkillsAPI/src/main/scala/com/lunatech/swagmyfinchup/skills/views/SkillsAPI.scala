@@ -8,14 +8,14 @@ import com.lunatech.swagmyfinchup.skills.views.Routes._
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.stats.Counter
 import com.twitter.io.Buf
-import com.twitter.logging.Logger
+import com.twitter.util.logging.Logging
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax._
 
-trait SkillsAPI extends Encoders {
+trait SkillsAPI extends Encoders with Logging {
 
-  val log: Logger
   val skillsCounter: Counter
 
   def swaggerdocs: Endpoint[Response] =
@@ -45,7 +45,7 @@ trait SkillsAPI extends Encoders {
     }
 
   def getSkill: Endpoint[Skill] =
-    get(skills :: uuid) { id: UUID =>
+    get(skills :: path[UUID]) { id: UUID =>
       SqlController getSkill id map {
         case Right(u) => Ok(u)
         case Left(e)  => solveException(e)
@@ -54,7 +54,7 @@ trait SkillsAPI extends Encoders {
 
   def patchedSkill: Endpoint[Skill => Skill] = jsonBody[Skill => Skill]
   def updateSkill: Endpoint[Skill] =
-    patch(skills :: uuid :: patchedSkill) { (id: UUID, skillToSkill: Skill => Skill) =>
+    patch(skills :: path[UUID] :: patchedSkill) { (id: UUID, skillToSkill: Skill => Skill) =>
       SqlController updateSkill (id, skillToSkill) map {
         case Right(skill) => Created(skill)
         case Left(e)      => solveException(e)
@@ -62,7 +62,7 @@ trait SkillsAPI extends Encoders {
     }
 
   def deleteSkill: Endpoint[Int] =
-    delete(skills :: uuid) { id: UUID =>
+    delete(skills :: path[UUID]) { id: UUID =>
       SqlController deleteSkill id map {
         case Right(u) => Ok(u)
         case Left(e)  => solveException(e)

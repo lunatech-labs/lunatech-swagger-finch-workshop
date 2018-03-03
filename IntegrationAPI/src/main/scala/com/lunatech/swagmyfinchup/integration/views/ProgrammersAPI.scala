@@ -5,12 +5,14 @@ import java.util.UUID
 import com.lunatech.swagmyfinchup.integration.controllers.APIService
 import com.lunatech.swagmyfinchup.integration.models.Programmer
 import com.lunatech.swagmyfinchup.integration.views.Routes._
+import com.twitter.util.logging.Logging
 import io.circe.Json
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax._
 
-trait ProgrammersAPI extends Encoders {
+trait ProgrammersAPI extends Encoders with Logging {
 
   def programmersService: APIService[Programmer]
 
@@ -25,7 +27,7 @@ trait ProgrammersAPI extends Encoders {
     }
 
   def getProgrammer: Endpoint[Programmer] =
-    get(programmers :: uuid) { id: UUID =>
+    get(programmers :: path[UUID]) { id: UUID =>
       programmersService read id map {
         case Right(programmer) => Ok(programmer)
         case Left(e)           => InternalServerError(e)
@@ -35,7 +37,7 @@ trait ProgrammersAPI extends Encoders {
   def patchedProgrammer: Endpoint[Programmer => Programmer] =
     jsonBody[Programmer => Programmer]
   def updateProgrammer: Endpoint[Programmer] =
-    patch(programmers :: uuid :: patchedProgrammer) {
+    patch(programmers :: path[UUID] :: patchedProgrammer) {
       (id: UUID, integrationProgrammeroProgrammer: Programmer => Programmer) =>
         programmersService update (id, integrationProgrammeroProgrammer) map {
           case Right(programmer) => Created(programmer)
@@ -44,7 +46,7 @@ trait ProgrammersAPI extends Encoders {
     }
 
   def deleteProgrammer: Endpoint[Int] =
-    delete(programmers :: uuid) { id: UUID =>
+    delete(programmers :: path[UUID]) { id: UUID =>
       programmersService delete id map {
         case Right(programmer) => Ok(programmer)
         case Left(e)           => InternalServerError(e)

@@ -1,16 +1,23 @@
 <configuration>
     <appender name="OPERLOG" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>log/sqlchecker.log</file>
+        <file>log/integration.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>Integration-hist.%d{yyyy-MM-dd}.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
         </rollingPolicy>
         <encoder>
-            <pattern>%d{ISO8601} %msg%n</pattern>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
         </encoder>
     </appender>
-    <logger name="com.twitter.finagle" level="INFO">
-        <appender-ref ref="OPERLOG" />
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <!-- encoders are assigned the type
+             ch.qos.logback.classic.encoder.PatternLayoutEncoder by default -->
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+        </encoder>
+    </appender>
+    <logger name="com.lunatech.swagmyfinchup" level="debug">
+        <appender-ref ref="STDOUT" />
     </logger>
     <root level="info">
         <appender-ref ref="OPERLOG" />

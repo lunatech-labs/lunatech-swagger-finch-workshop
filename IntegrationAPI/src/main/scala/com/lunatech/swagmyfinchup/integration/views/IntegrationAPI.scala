@@ -9,14 +9,14 @@ import com.lunatech.swagmyfinchup.integration.controllers.{
 }
 import com.lunatech.swagmyfinchup.integration.models._
 import com.lunatech.swagmyfinchup.integration.views.Routes._
-import com.twitter.logging.Logger
+import com.twitter.util.logging.Logging
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax._
 
-trait IntegrationAPI {
+trait IntegrationAPI extends Logging {
 
-  val log: Logger
   def programmersService: APIService[Programmer]
   def skillsService: APIService[Skill]
 
@@ -27,19 +27,18 @@ trait IntegrationAPI {
       CombinerController createIntegration (integration, programmersService, skillsService) map {
         case Right(integration) => Created(integration)
         case Left(e) => {
-          log.error("Boooom", e)
+          logger.error("Boooom", e)
           InternalServerError(e)
         }
       }
     }
 
   def getIntegration: Endpoint[Integrated] =
-    get(integrations :: uuid) { id: UUID =>
+    get(integrations :: path[UUID]) { id: UUID =>
       CombinerController readIntegration (id, programmersService, skillsService) map {
         case Right(u) => Ok(u)
         case Left(e) => {
-//          log.error("Boooom", e)
-          println(e)
+          logger.error("Boooom", e)
           InternalServerError(e)
         }
       }
@@ -48,23 +47,23 @@ trait IntegrationAPI {
   def patchedIntegration: Endpoint[Integration => Integration] =
     jsonBody[Integration => Integration]
   def updateIntegration: Endpoint[Integrated] =
-    patch(integrations :: uuid :: patchedIntegration) {
+    patch(integrations :: path[UUID] :: patchedIntegration) {
       (id: UUID, integrationToIntegration: Integration => Integration) =>
         CombinerController updateIntegration (id, integrationToIntegration, programmersService, skillsService) map {
           case Right(integration) => Created(integration)
           case Left(e) => {
-            log.error("Boooom", e)
+            logger.error("Boooom", e)
             InternalServerError(e)
           }
         }
     }
 
   def deleteIntegration: Endpoint[Int] =
-    delete(integrations :: uuid) { id: UUID =>
+    delete(integrations :: path[UUID]) { id: UUID =>
       SqlController deleteIntegration id map {
         case Right(u) => Ok(u)
         case Left(e) => {
-          log.error("Boooom", e)
+          logger.error("Boooom", e)
           InternalServerError(e)
         }
       }
@@ -75,32 +74,33 @@ trait IntegrationAPI {
       SqlController listIntegrations (skp, lm) map {
         case Right(u) => Ok(u)
         case Left(e) => {
-          log.error("Boooom", e)
+          logger.error("Boooom", e)
           InternalServerError(e)
         }
       }
     }
 
   def listSkillsForProgrammer: Endpoint[Seq[IntegratedSkill]] =
-    get(integrations :: skills :: uuid :: skip :: limit) { (id: UUID, skp: Int, lm: Int) =>
+    get(integrations :: skills :: path[UUID] :: skip :: limit) { (id: UUID, skp: Int, lm: Int) =>
       CombinerController readIntegrationsForProgrammer (id, skp, lm, skillsService) map {
         case Right(integration) => Ok(integration)
         case Left(e) => {
-          log.error("Boooom", e)
+          logger.error("Boooom", e)
           InternalServerError(e)
         }
       }
     }
 
   def listProgrammersForSkill: Endpoint[Seq[IntegratedProgrammer]] =
-    get(integrations :: programmers :: uuid :: skip :: limit) { (id: UUID, skp: Int, lm: Int) =>
-      CombinerController readIntegrationsForSkill (id, skp, lm, programmersService) map {
-        case Right(integration) => Ok(integration)
-        case Left(e) => {
-          log.error("Boooom", e)
-          InternalServerError(e)
+    get(integrations :: programmers :: path[UUID] :: skip :: limit) {
+      (id: UUID, skp: Int, lm: Int) =>
+        CombinerController readIntegrationsForSkill (id, skp, lm, programmersService) map {
+          case Right(integration) => Ok(integration)
+          case Left(e) => {
+            logger.error("Boooom", e)
+            InternalServerError(e)
+          }
         }
-      }
     }
 
   val integrationApi = getIntegration :+: deleteIntegration :+: listIntegrations :+: insertIntegration :+: updateIntegration :+: listSkillsForProgrammer :+: listProgrammersForSkill

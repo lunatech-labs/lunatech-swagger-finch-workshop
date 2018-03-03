@@ -1,19 +1,21 @@
+import scala.sys.process._
+import sbt._
+import Keys._
+
+scalafixSettings
+sbtfixSettings // enable semanticdb-sbt for sbt metabuilds.
 
 name := "SkillsAPI"
+version := "1.0.2"
+scalaVersion := "2.12.4"
 
-version := "1.0.1"
-
-scalaVersion := "2.12.3"
-
-//scalafmtConfig in ThisBuild := Some(file(".scalafmt.conf"))
-
-lazy val finagleVersion       = "6.45.0"
-lazy val twitterServerVersion = "1.30.0"
-
-lazy val catsVersion = "0.9.0"
-lazy val circeVersion = "0.8.0"
-lazy val finchVersion = "0.15.1"
-lazy val logbackVersion = "1.2.3"
+lazy val finagleVersion    = "18.2.0"
+lazy val finchVersion      = "0.17.0"
+lazy val catsVersion       = "0.9.0"
+lazy val circeVersion      = "0.9.0"
+lazy val scalaCheckVersion = "1.13.4"
+lazy val scalaMetaVersion  = "3.0.0"
+lazy val scalaTestVersion  = "3.0.1"
 
 val rootDependencies = Seq(
   "com.twitter"        %% "finagle-http"   % finagleVersion,
@@ -22,17 +24,42 @@ val rootDependencies = Seq(
   "io.circe"           %% "circe-parser"   % circeVersion,
   "com.github.finagle" %% "finch-core"     % finchVersion,
   "com.github.finagle" %% "finch-circe"    % finchVersion,
-  "com.twitter"        %% "twitter-server" % twitterServerVersion,
-  "com.typesafe"       % "config"          % "1.3.1",
-  "com.typesafe.slick" %% "slick"          % "3.2.0",
-  "com.h2database"     % "h2"              % "1.3.175",
-  "joda-time"          % "joda-time"       % "2.3",
-  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+  "com.twitter"        %% "twitter-server" % finagleVersion,
+  "com.typesafe"       % "config"          % "1.3.3",
+  "com.typesafe.slick" %% "slick"          % "3.2.1",
+  "com.h2database"     % "h2"              % "1.4.196",
+  "joda-time"          % "joda-time"       % "2.9.9",
+  "ch.qos.logback"     % "logback-classic" % "1.2.3"
 )
 
 val testDependencies = Seq(
-  "org.scalacheck" %% "scalacheck" % "1.13.5",
-  "org.scalatest"  %% "scalatest"  % "3.0.3"
+  "org.scalacheck" %% "scalacheck" % scalaCheckVersion,
+  "org.scalatest"  %% "scalatest"  % scalaTestVersion
+)
+
+lazy val compilerOptions = Seq(
+  "-deprecation",
+  "-encoding",
+  "UTF-8",
+  "-target:jvm-1.8",
+  "-feature",
+  "-language:existentials",
+  "-language:higherKinds",
+  "-language:postfixOps",
+  "-language:implicitConversions",
+  "-unchecked",
+  "-Yno-adapted-args",
+  "-Ywarn-dead-code",
+  "-Ywarn-inaccessible",
+  "-Ywarn-unused",
+  "-Ywarn-unused-import",
+  "-Ywarn-numeric-widen",
+  "-Yrangepos",
+  "-Xplugin-require:semanticdb",
+  "-Ypartial-unification",
+  "-P:semanticdb:sourceroot:/x",
+  "-Xfuture",
+  "-Xlint"
 )
 
 resolvers ++= Seq(
@@ -43,11 +70,11 @@ lazy val root =
   project
     .in(file("."))
     .settings(
-      scalacOptions += "-Ywarn-unused-import" ,
+      scalacOptions ++= compilerOptions,
       libraryDependencies ++= Seq(
-        "org.scala-lang" % "scala-reflect" % scalaVersion.value
-        //for tomcat webapp
-      ) ++ rootDependencies ++ testDependencies.map(_ % "test"))
+        "org.scala-lang"                              % "scala-reflect" % scalaVersion.value
+      ) ++ rootDependencies ++ testDependencies.map(_ % "test")
+    )
     .settings(initialCommands in console :=
       """
         |import io.finch._
@@ -67,4 +94,10 @@ lazy val root =
 
 fork in run := true
 
-//reformatOnCompileSettings
+scalafmtConfig in ThisBuild := file(".scalafmt.conf")
+
+scalafixConfigure(Compile, Test, IntegrationTest)
+
+addCommandAlias("lint", "all compile:scalafix test:scalafix")
+
+scalafmtOnCompile := true

@@ -1,7 +1,5 @@
 package com.lunatech.swagmyfinchup.integration
 
-import java.io.InputStream
-
 import com.lunatech.swagmyfinchup.integration.controllers.impl.{ProgrammersService, SkillsService}
 import com.lunatech.swagmyfinchup.integration.controllers.{APIService, SqlController}
 import com.lunatech.swagmyfinchup.integration.filters.{CORSFilter, HeaderValidator}
@@ -21,10 +19,9 @@ import com.ccadllc.cedi.config.ConfigParser
 import com.lunatech.swagmyfinchup.integration.utils.Helpers._
 import com.twitter.finagle.http.filter.Cors
 import com.twitter.finagle.http.filter.Cors.HttpFilter
-import java.security.KeyStore
-import javax.net.ssl.{KeyManagerFactory, SSLContext, TrustManagerFactory}
+import javax.net.ssl.SSLContext
 
-import com.lunatech.swagmyfinchup.integration.utils.{ClientFactory, ServerFactory}
+import com.lunatech.swagmyfinchup.integration.utils.{ClientFactory, ServerFactory, TLSFactory}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -38,52 +35,17 @@ object Main
   val conf = ConfigFactory.load()
 
   val port: Flag[Int]         = flag("port", 8090, "TCP port for HTTP server")
-  val filteredPort: Flag[Int] = flag("port", 8095, "TCP port for HTTP server")
-  val tlsPort: Flag[Int]      = flag("port", 38082, "TCP port for HTTPS server")
+  val filteredPort: Flag[Int] = flag("fileredport", 8095, "TCP port for HTTP server")
+  val tlsPort: Flag[Int]      = flag("tlsport", 38082, "TCP port for HTTPS server")
 
-  override def defaultHttpPort: Int = 9985
+  override def defaultAdminPort: Int = 9985
 
   val derivedParser: ConfigParser[CorsConfig] = ConfigParser.derived[CorsConfig]
   val corsconfig: CorsConfig                  = validateConfig(derivedParser.under("server.cors").parse(conf))
   val corsFilter: HttpFilter                  = new Cors.HttpFilter(corspolicy(corsconfig))
 
-
-  val sSLContext: SSLContext = {
-    val keystore = getClass.getClassLoader.getResourceAsStream("keystore.jks")
-    val truststore = getClass.getClassLoader.getResourceAsStream("truststore.jks")
-    val passphrase      = "17555599"
-    createTlsContext(keystore, passphrase, passphrase, truststore, passphrase)
-  }
-
-  def createTlsContext(keyStore: InputStream, keyStorePassphrase: String, privateKeyPassphrase: String,
-                       trustKeystore                    : InputStream, trustKeystorePassphrase: String): SSLContext = {
-
-    require(Option(keyStore).isDefined, "Client keystore must be defined")
-    require(Option(trustKeystore).isDefined, "Trust store must be defined")
-
-    // Create and initialize the SSLContext with key material
-    val clientKeystorePassphraseChars = keyStorePassphrase.toCharArray
-    val clientKeyPassphraseChars = privateKeyPassphrase.toCharArray
-    val trustKeystorePassphraseChars = trustKeystorePassphrase.toCharArray
-
-    // First initialize the key and trust material
-    val ksKeys = KeyStore.getInstance("JKS")
-    ksKeys.load(keyStore, clientKeystorePassphraseChars)
-    val ksTrust = KeyStore.getInstance("JKS")
-    ksTrust.load(trustKeystore, trustKeystorePassphraseChars)
-
-    // KeyManagers decide which key material to use
-    val kmf = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm)
-    kmf.init(ksKeys, clientKeyPassphraseChars)
-
-    // TrustManagers decide whether to allow connections
-    val tmf = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm)
-    tmf.init(ksTrust)
-
-    val sslContext = SSLContext.getInstance("TLS")
-    sslContext.init(kmf.getKeyManagers, tmf.getTrustManagers, null)
-    sslContext
-  }
+  val sSLContext: SSLContext =
+    TLSFactory.createTlsContext("keystore.jks", "truststore.jks", "17555599")
 
   val programmersAPIHost: Name = Resolver.eval(conf.getString("services.programmers.host"))
 
@@ -110,7 +72,7 @@ object Main
     HeaderValidator("auth-token", "UltraSecretLunatechPassword") andThen corsFiltered
 
   def main(): Unit = {
-    log.info("Serving the IntegrationAPI")
+    logger.info("Serving the IntegrationAPI")
     SqlController.createDatabase
 
     val server = ServerFactory("MainServer", statsReceiver, port, corsFiltered, None)

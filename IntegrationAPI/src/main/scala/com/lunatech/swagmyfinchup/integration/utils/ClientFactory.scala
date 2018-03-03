@@ -40,15 +40,18 @@ object ClientFactory {
   implicit class ClientOps(client: Http.Client) {
 
     def withTls(sslContextOpt: Option[SSLContext]) =
-      sslContextOpt.map { sslContex =>
-        client.withTransport.tls(sslContex)
-      }.getOrElse(client)
+      sslContextOpt
+        .map { sslContex =>
+          client.withTransport.tls(sslContex)
+        }
+        .getOrElse(client)
     def withFailFast(failFast: Boolean): Client =
       if (failFast) client else client.withSessionQualifier.noFailFast
 
     def configurePool(low: Int, high: Int, bufferSize: Int, idleTime: Int, maxWaiters: Int) =
-      client.configured(DefaultPool
-        .Param(low, high, bufferSize, idleTime = Duration.fromMilliseconds(idleTime), maxWaiters))
+      client.configured(
+        DefaultPool
+          .Param(low, high, bufferSize, idleTime = Duration.fromMilliseconds(idleTime), maxWaiters))
 
   }
 

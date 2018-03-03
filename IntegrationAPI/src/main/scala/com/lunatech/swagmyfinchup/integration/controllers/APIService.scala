@@ -37,21 +37,19 @@ trait APIService[T] {
       case Right(result) => Right(result)
     }
 
-  protected def processRequest[T](
-      request: Request,
-      f: Json => Either[SMFUEerror, T]): Future[Either[SMFUEerror, T]] =
+  protected def processRequest[A](request: Request,
+                                  f: Json => Either[SMFUEerror, A]): Future[Either[SMFUEerror, A]] =
     client(request) map (resp => {
-                           if (resp.statusCode >= 400)
-                             Left(
-                               CreationException(
-                                 apiName,
-                                 s"$apiName error: ${resp.statusCode} - ${resp.getContentString}"))
-                           else {
-                             parse(resp.contentString) match {
-                               case Left(e)     => Left(CreationException(apiName, e.getMessage))
-                               case Right(json) => f(json)
-                             }
-                           }
-                         })
+      if (resp.statusCode >= 400)
+        Left(
+          CreationException(apiName,
+                            s"$apiName error: ${resp.statusCode} - ${resp.getContentString}"))
+      else {
+        parse(resp.contentString) match {
+          case Left(e)     => Left(CreationException(apiName, e.getMessage))
+          case Right(json) => f(json)
+        }
+      }
+    })
 
 }

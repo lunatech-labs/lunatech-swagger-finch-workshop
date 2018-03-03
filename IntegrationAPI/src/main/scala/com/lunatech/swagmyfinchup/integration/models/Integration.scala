@@ -2,9 +2,9 @@ package com.lunatech.swagmyfinchup.integration.models
 
 import java.util.UUID
 
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 
-case class Integration(id: UUID, programmerId: UUID, skillId: UUID, level: Int)
+final case class Integration(id: UUID, programmerId: UUID, skillId: UUID, level: Int)
 
 class Integrations(tag: Tag) extends Table[Integration](tag, "INTEGRATION") {
   def id           = column[UUID]("ID", O.PrimaryKey)

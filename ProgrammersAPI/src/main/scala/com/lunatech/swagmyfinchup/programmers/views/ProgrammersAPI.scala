@@ -8,16 +8,17 @@ import com.lunatech.swagmyfinchup.programmers.views.Routes._
 import com.twitter.finagle.http.Response
 import com.twitter.finagle.stats.Counter
 import com.twitter.io.Buf
-import com.twitter.logging.Logger
+import com.twitter.util.logging.Logging
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax._
 
 import scala.util.Random
 
-trait ProgrammersAPI extends Encoders {
+trait ProgrammersAPI extends Encoders with Logging {
 
-  val log: Logger
+//  val logger: Logger
   val programmersCounter: Counter
 
   def swaggerdocs: Endpoint[Response] =
@@ -61,7 +62,7 @@ trait ProgrammersAPI extends Encoders {
     }
 
   def getProgrammer: Endpoint[Programmer] =
-    get(programmers :: uuid) { id: UUID =>
+    get(programmers :: path[UUID]) { id: UUID =>
       SqlController getProgrammer id map {
         case Right(u) => Ok(u)
         case Left(e)  => solveException(e)
@@ -70,7 +71,7 @@ trait ProgrammersAPI extends Encoders {
 
   def patchedProgrammer: Endpoint[Programmer => Programmer] = jsonBody[Programmer => Programmer]
   def updateProgrammer: Endpoint[Programmer] =
-    patch(programmers :: uuid :: patchedProgrammer) {
+    patch(programmers :: path[UUID] :: patchedProgrammer) {
       (id: UUID, programmerToProgrammer: Programmer => Programmer) =>
         SqlController updateProgrammer (id, programmerToProgrammer) map {
           case Right(programmer) => Created(programmer)
@@ -79,7 +80,7 @@ trait ProgrammersAPI extends Encoders {
     }
 
   def deleteProgrammer: Endpoint[Int] =
-    delete(programmers :: uuid) { id: UUID =>
+    delete(programmers :: path[UUID]) { id: UUID =>
       SqlController deleteProgrammer id map {
         case Right(u) => Ok(u)
         case Left(e)  => solveException(e)
@@ -88,18 +89,21 @@ trait ProgrammersAPI extends Encoders {
 
   def listProgrammers: Endpoint[Seq[Programmer]] =
     get(programmers :: skip :: limit) { (skp: Int, lm: Int) =>
-      SqlController listProgrammers (skp, lm) map {
-        case Right(u) => Ok(u)
-        case Left(e)  => solveException(e)
+      {
+        logger.info("Getting request")
+        SqlController listProgrammers (skp, lm) map {
+          case Right(u) => Ok(u)
+          case Left(e)  => solveException(e)
+        }
       }
     }
 
   def getProgrammerSlow: Endpoint[Programmer] =
     get(programmers :: slow) {
       if (Random.nextBoolean()) {
-        println("SLOOOOOOOOOOOOOOOW")
+        logger.info("SLOOOOOOOOOOOOOOOW")
         Thread.sleep(15000)
-      } else println("FAAAAAAAAAAAAST")
+      } else logger.info("FAAAAAAAAAAAAST")
       Ok(
         Programmer(UUID.randomUUID(),
                    Random.nextString(5),

@@ -5,13 +5,14 @@ import java.util.UUID
 import io.circe.generic.semiauto._
 import io.circe.{Decoder, Encoder, Json}
 import io.circe.syntax._
-import slick.driver.H2Driver.api._
+import slick.jdbc.H2Profile.api._
 
-case class Programmer(id: UUID, name: String, lastName: String, email: String) //add email
+final case class Programmer(id: UUID, name: String, lastName: String, email: String)
 
 object Programmer extends ((UUID, String, String, String) => Programmer) {
 
-  implicit val encodeProgrammer = new Encoder[Programmer] {
+  implicit val encodeProgrammer: _root_.scala.AnyRef with _root_.io.circe.Encoder[
+    _root_.com.lunatech.swagmyfinchup.programmers.models.Programmer] {} = new Encoder[Programmer] {
     override def apply(programmer: Programmer): Json = Json.obj(
       "id"       -> programmer.id.asJson,
       "name"     -> programmer.name.asJson,

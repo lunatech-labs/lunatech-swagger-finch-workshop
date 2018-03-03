@@ -7,7 +7,7 @@ import scala.util.{Success, Failure}
 object Converters {
 
   /** Convert from a Twitter Future to a Scala Future */
-  implicit class RichTwitterFuture[A](val tf: TwitterFuture[A]) extends AnyVal {
+  implicit class RichTwitterFuture[A](private val tf: TwitterFuture[A]) extends AnyVal {
     def asScala(implicit e: ExecutionContext): ScalaFuture[A] = {
       val promise: ScalaPromise[A] = ScalaPromise()
       tf.respond {
@@ -19,7 +19,7 @@ object Converters {
   }
 
   /** Convert from a Scala Future to a Twitter Future */
-  implicit class RichScalaFuture[A](val sf: ScalaFuture[A]) extends AnyVal {
+  implicit class RichScalaFuture[A](private val sf: ScalaFuture[A]) extends AnyVal {
     def asTwitter(implicit e: ExecutionContext): TwitterFuture[A] = {
       val promise: TwitterPromise[A] = new TwitterPromise[A]()
       sf.onComplete {

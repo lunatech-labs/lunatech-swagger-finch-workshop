@@ -5,12 +5,14 @@ import java.util.UUID
 import com.lunatech.swagmyfinchup.integration.controllers.APIService
 import com.lunatech.swagmyfinchup.integration.models.Skill
 import com.lunatech.swagmyfinchup.integration.views.Routes._
+import com.twitter.util.logging.Logging
 import io.circe.Json
 import io.circe.generic.auto._
 import io.finch._
 import io.finch.circe._
+import io.finch.syntax._
 
-trait SkillsAPI {
+trait SkillsAPI extends Encoders with Logging {
 
   def skillsService: APIService[Skill]
 
@@ -25,7 +27,7 @@ trait SkillsAPI {
     }
 
   def getSkill: Endpoint[Skill] =
-    get(skills :: uuid) { id: UUID =>
+    get(skills :: path[UUID]) { id: UUID =>
       skillsService read id map {
         case Right(u) => Ok(u)
         case Left(e) => {
@@ -38,7 +40,7 @@ trait SkillsAPI {
   def patchedSkill: Endpoint[Skill => Skill] =
     jsonBody[Skill => Skill]
   def updateSkill: Endpoint[Skill] =
-    patch(skills :: uuid :: patchedSkill) { (id: UUID, integrationSkilloSkill: Skill => Skill) =>
+    patch(skills :: path[UUID] :: patchedSkill) { (id: UUID, integrationSkilloSkill: Skill => Skill) =>
       skillsService update (id, integrationSkilloSkill) map {
         case Right(skill) => Created(skill)
         case Left(e)      => InternalServerError(e)
@@ -46,7 +48,7 @@ trait SkillsAPI {
     }
 
   def deleteSkill: Endpoint[Int] =
-    delete(skills :: uuid) { id: UUID =>
+    delete(skills :: path[UUID]) { id: UUID =>
       skillsService delete id map {
         case Right(u) => Ok(u)
         case Left(e)  => InternalServerError(e)
